@@ -1,0 +1,17 @@
+{
+  "name": "gymatrix-ai",
+  "version": "1.0.0",
+  "description": "js fitness app with mediapipe ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "alevante",
+  "license": "ISC",
+  "dependencies": {
+    "@mediapipe/camera_utils": "^0.3.1675466862",
+    "@mediapipe/drawing_utils": "^0.3.1675466124",
+    "@mediapipe/pose": "^0.5.1675469404",
+    "@mediapipe/tasks-genai": "^0.10.23"
+  }
+}

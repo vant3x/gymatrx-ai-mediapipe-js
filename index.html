@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salva Mascotas - Gymatrix AI Mediapipe by Alevante</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+    <link rel="stylesheet" href="./public/assets/css/styles.css">
+
+</head>
+<body>
+    <div class="container">
+        <div class="camera-section">
+            <video id="videoElement" autoplay muted playsinline></video>
+            <canvas id="canvasElement" class="canvas-overlay"></canvas>
+        </div>
+        
+        <div class="ui-section">
+            <h1 style="text-align: center; margin-bottom: 30px; font-size: 24px;">🐱 Gymatrix 🐶</h1>
+            
+            <div class="exercise-selector">
+                <div>
+                    <h3>Selecciona tu ejercicio:</h3>
+
+                </div>
+                <div class="exercise-selector-options">
+                    <button class="exercise-btn active" data-exercise="pushups">💪 Flexiones</button>
+                <button class="exercise-btn" data-exercise="pullups">🏋️ Dominadas</button>
+                </div>
+            </div>
+
+            <div class="status-indicator status-waiting" id="statusIndicator">
+                Preparándose...
+            </div>
+
+            <div class="stats-panel">
+                <div class="stat-item">
+                    <span>Repeticiones actuales:</span>
+                    <span class="counter" id="repCounter">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>🐱🏋️ Gatitos salvados:</span>
+                    <span class="counter" id="catCounter">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>🐶💪 Perritos salvados:</span>
+                    <span class="counter" id="dogCounter">0</span>
+                </div>
+                 <!--<div class="stat-item">
+                    <span>💪 Total flexiones:</span>
+                    <span class="counter" id="pushupTotal">0</span>
+                </div>-->
+                <!--<div class="stat-item">
+                    <span>🏋️ Total dominadas:</span>
+                    <span class="counter" id="pullupTotal">0</span>
+                </div>-->
+                <div class="stat-item">
+                    <span>Ejercicio actual:</span>
+                    <span id="currentExercise">Flexiones</span>
+                </div>
+            </div>
+
+            <div class="pet-showcase">
+                <h3>Tu mascota actual:</h3>
+                <div class="pet-container">
+                    <span id="petEmoji">🐱</span>
+                </div>
+                <p id="petMessage">¡Ayúdame a salvar este gatito!</p>
+            </div>
+
+            <button class="start-btn" id="startBtn">🚀 Comenzar Ejercicio</button>
+        </div>
+    </div>
+
+    <div class="celebration" id="celebration"></div>
+    <script src="./src/gymatrixai-brain.js"></script>
+
+</body>
+</html>

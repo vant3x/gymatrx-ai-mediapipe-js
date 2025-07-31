@@ -1,0 +1,374 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    overflow: hidden;
+    color: white;
+}
+
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+.camera-section {
+    flex: 2;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+
+}
+
+.ui-section {
+    flex: 1;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    overflow-y: auto;
+    max-width: 530px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        height: 100vh;
+    }
+
+    .camera-section {
+        flex: 1;
+        min-height: 40vh;
+        max-height: 45vh;
+    }
+
+    .ui-section {
+        flex: 1;
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 15px;
+        min-height: 55vh;
+        max-height: 60vh;
+    }
+
+    body {
+        font-size: 14px;
+    }
+
+    h1 {
+        font-size: 20px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .exercise-btn {
+        padding: 12px;
+        font-size: 14px;
+        margin: 8px 0;
+    }
+
+    .stats-panel {
+        padding: 15px;
+        margin: 15px 0;
+    }
+
+    .stat-item {
+        font-size: 16px;
+        margin: 12px 0;
+    }
+
+    .counter {
+        font-size: 28px;
+    }
+
+    .pet-container {
+        width: 160px;
+        height: 160px;
+        font-size: 60px;
+        margin: 15px auto;
+    }
+
+    .start-btn {
+        padding: 15px;
+        font-size: 16px;
+        margin-top: 15px;
+    }
+
+    .celebration {
+        font-size: 36px;
+    }
+
+    .status-indicator {
+        padding: 8px;
+        margin: 8px 0;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ui-section {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 18px !important;
+        margin-bottom: 15px !important;
+    }
+
+    .exercise-btn {
+        padding: 10px;
+        font-size: 13px;
+        margin: 6px 0;
+    }
+
+    .stats-panel {
+        padding: 12px;
+        margin: 12px 0;
+    }
+
+    .stat-item {
+        font-size: 14px;
+        margin: 10px 0;
+    }
+
+    .counter {
+        font-size: 24px;
+    }
+
+    .pet-container {
+        width: 120px;
+        height: 120px;
+        font-size: 50px;
+        margin: 10px auto;
+    }
+
+    .start-btn {
+        padding: 12px;
+        font-size: 14px;
+    }
+
+    .celebration {
+        font-size: 28px;
+    }
+
+    .pet-showcase h3 {
+        font-size: 16px;
+    }
+
+    #petMessage {
+        font-size: 14px;
+    }
+}
+
+/* Landscape mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+    .container {
+        flex-direction: row;
+    }
+
+    .camera-section {
+        flex: 1.5;
+    }
+
+    .ui-section {
+        flex: 1;
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
+        border-top: none;
+        padding: 10px;
+        font-size: 12px;
+    }
+
+    .pet-container {
+        width: 80px;
+        height: 80px;
+        font-size: 35px;
+        margin: 5px auto;
+    }
+
+    .stats-panel {
+        padding: 8px;
+        margin: 8px 0;
+    }
+
+    .exercise-btn {
+        padding: 8px;
+        font-size: 12px;
+        margin: 4px 0;
+    }
+
+    .start-btn {
+        padding: 10px;
+        font-size: 13px;
+    }
+
+    h1 {
+        font-size: 16px !important;
+        margin-bottom: 10px !important;
+    }
+
+    .counter {
+        font-size: 20px;
+    }
+}
+
+#videoElement {
+    width: 100%;
+    max-width: 740px;
+    height: auto;
+    border-radius: 15px;
+    transform: scaleX(-1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 768px) {
+    #videoElement {
+        max-width: 100%;
+        border-radius: 10px;
+    }
+}
+
+.canvas-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scaleX(-1);
+    pointer-events: none;
+    border-radius: 15px;
+}
+.exercise-selector-options {
+    display: flex; 
+}
+.exercise-selector {
+    margin-bottom: 30px;
+   
+}
+
+.exercise-btn {
+    width: 30%;
+    padding: 15px;
+    margin: 10px 6px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.exercise-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.exercise-btn.active {
+    background: linear-gradient(45deg, #00b894, #00a085);
+}
+
+.stats-panel {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px 0;
+    backdrop-filter: blur(10px);
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 15px 0;
+    font-size: 18px;
+}
+
+.counter {
+    font-size: 36px;
+    font-weight: bold;
+    color: #00b894;
+    text-shadow: 0 2px 10px rgba(0, 184, 148, 0.5);
+}
+
+.pet-showcase {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.pet-container {
+    width: 180px;
+    height: 180px;
+    margin: 20px auto;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    font-size: 80px;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.celebration {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 48px;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    z-index: 1000;
+    animation: celebrate 2s ease-out;
+    pointer-events: none;
+}
+
+@keyframes celebrate {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+    20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+
+.start-btn {
+    width: 100%;
+    padding: 20px;
+    background: linear-gradient(45deg, #ffd700, #ffb700);
+    border: none;
+    border-radius: 15px;
+    color: #333;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.3s ease;
+}
+
+.start-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4);
+}
+
+.status-indicator {
+    padding: 10px;
+    border-radius: 20px;
+    margin: 10px 0;
+    text-align: center;
+    font-weight: bold;
+}
+
+.status-ready { background: rgba(0, 184, 148, 0.8); }
+.status-exercising { background: rgba(255, 107, 107, 0.8); }
+.status-waiting { background: rgba(255, 193, 7, 0.8); color: #333; }
