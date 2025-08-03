@@ -149,6 +149,8 @@ class ExerciseApp {
         const avgHipY = (leftHip.y + rightHip.y) / 2;
         const bodyAngle = Math.abs(avgShoulderY - avgHipY);
         
+        console.log(`Body Angle: ${bodyAngle.toFixed(2)}`);
+
         if (bodyAngle > 0.15) {
             this.updateStatus('waiting', '🔄 Ponte en posición de plancha');
             return;
@@ -158,6 +160,8 @@ class ExerciseApp {
         const leftElbowAngle = this.calculateAngle(leftShoulder, leftElbow, leftWrist);
         const rightElbowAngle = this.calculateAngle(rightShoulder, rightElbow, rightWrist);
         const avgElbowAngle = (leftElbowAngle + rightElbowAngle) / 2;
+
+        console.log(`Elbow Angle: ${avgElbowAngle.toFixed(2)}`);
 
         // Verificar que ambos brazos estén sincronizados
         const elbowDifference = Math.abs(leftElbowAngle - rightElbowAngle);
