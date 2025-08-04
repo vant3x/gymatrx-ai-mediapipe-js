@@ -5,14 +5,13 @@ class ExerciseApp {
         this.isActive = false;
         this.currentExercise = 'pushups';
         this.repCount = 0;
-        this.petsCounter = 0;
-        this.isInPosition = false;
-        this.lastPosition = null;
-        
+        // 'stage' rastrea el estado del ejercicio (arriba o abajo) para contar una repetición completa.
+        this.stage = 'up'; // Puede ser 'up' o 'down'
+
         this.pushupCount = 0;
         this.pullupCount = 0;
-        this.catsCount = 0;  
-        this.dogsCount = 0; 
+        this.catsCount = 0;
+        this.dogsCount = 0;
         this.initializeElements();
         this.initializeMediaPipe();
         this.bindEvents();
@@ -32,7 +31,7 @@ class ExerciseApp {
         this.petMessage = document.getElementById('petMessage');
         this.celebration = document.getElementById('celebration');
         this.petEmoji = document.getElementById('petEmoji');
-        
+
         this.updateCurrentPet();
     }
 
@@ -40,9 +39,6 @@ class ExerciseApp {
         if (this.currentExercise === 'pushups') {
             this.petEmoji.textContent = '🐱';
             this.petMessage.textContent = '¡Cada flexión salva un gatito!';
-            
-
-         /*   this.petMessage.textContent = `¡Ayúdame a salvar este gatito con flexiones! (${5 - (this.pushupCount % 5)} restantes)`;*/
         } else {
             this.petEmoji.textContent = '🐶';
             this.petMessage.textContent = '¡Cada dominada salva un perrito!';
@@ -51,9 +47,7 @@ class ExerciseApp {
 
     async initializeMediaPipe() {
         this.pose = new Pose({
-            locateFile: (file) => {
-                return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
-            }
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
         });
 
         this.pose.setOptions({
@@ -66,24 +60,22 @@ class ExerciseApp {
         });
 
         this.pose.onResults(this.onResults.bind(this));
-        
         await this.initializeCamera();
     }
 
     async initializeCamera() {
         try {
             const constraints = {
-                video: { 
+                video: {
                     width: window.innerWidth <= 768 ? { ideal: 480 } : { ideal: 740 },
                     height: window.innerWidth <= 768 ? { ideal: 360 } : { ideal: 480 },
                     facingMode: 'user'
                 }
             };
-            
+
             const stream = await navigator.mediaDevices.getUserMedia(constraints);
-            
             this.videoElement.srcObject = stream;
-            
+
             this.videoElement.addEventListener('loadedmetadata', () => {
                 this.canvasElement.width = this.videoElement.videoWidth;
                 this.canvasElement.height = this.videoElement.videoHeight;
@@ -109,16 +101,13 @@ class ExerciseApp {
     onResults(results) {
         this.canvasCtx.save();
         this.canvasCtx.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
-        
+
         if (results.poseLandmarks) {
-            // Dibujar pose
-            drawConnectors(this.canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {color: '#00FF00', lineWidth: 2});
-            drawLandmarks(this.canvasCtx, results.poseLandmarks, {color: '#FF0000', lineWidth: 1, radius: 3});
-         
-            // Analizar ejercicio
+            drawConnectors(this.canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, { color: '#00FF00', lineWidth: 2 });
+            drawLandmarks(this.canvasCtx, results.poseLandmarks, { color: '#FF0000', lineWidth: 1, radius: 3 });
             this.analyzeExercise(results.poseLandmarks);
         }
-        
+
         this.canvasCtx.restore();
     }
 
@@ -131,64 +120,49 @@ class ExerciseApp {
     }
 
     analyzePushups(landmarks) {
-        // Puntos clave: hombros (11,12), codos (13,14), muñecas (15,16), caderas (23,24)
         const leftShoulder = landmarks[11];
         const rightShoulder = landmarks[12];
         const leftElbow = landmarks[13];
         const rightElbow = landmarks[14];
-        const leftWrist = landmarks[15];
-        const rightWrist = landmarks[16];
         const leftHip = landmarks[23];
         const rightHip = landmarks[24];
 
-        if (!leftShoulder || !rightShoulder || !leftElbow || !rightElbow || 
-            !leftWrist || !rightWrist || !leftHip || !rightHip) return;
+        if (!leftShoulder || !rightShoulder || !leftElbow || !rightElbow || !leftHip || !rightHip) {
+            this.updateStatus('waiting', 'Asegúrate de que tu cuerpo sea visible.');
+            return;
+        }
 
-        // Verificar posición horizontal (cuerpo paralelo al suelo)
-        const avgShoulderY = (leftShoulder.y + rightShoulder.y) / 2;
-        const avgHipY = (leftHip.y + rightHip.y) / 2;
-        const bodyAngle = Math.abs(avgShoulderY - avgHipY);
+        // Se calcula la posición vertical (coordenada 'y') promedio de hombros y codos.
+        // En MediaPipe, un valor 'y' más bajo significa que está más arriba en la pantalla.
+        const shoulderAvgY = (leftShoulder.y + rightShoulder.y) / 2;
+        const elbowAvgY = (leftElbow.y + rightElbow.y) / 2;
+
+        // --- Lógica de Detección Multi-ángulo ---
+        // En lugar de usar ángulos (que cambian con la perspectiva), comparamos la altura relativa.
+        // Esto funciona sin importar si la cámara está de frente o de lado.
+
+        // Condición de bajada: los hombros están al mismo nivel o por debajo de los codos.
+        const isDown = shoulderAvgY >= elbowAvgY * 0.98; // El 0.98 da un pequeño margen.
+        // Condición de subida: los hombros están notablemente por encima de los codos (brazos estirados).
+        const isUp = shoulderAvgY < elbowAvgY * 0.85;
+
+        // --- Máquina de Estados para Contar Repeticiones ---
+        // Esto asegura que solo contamos una repetición completa (bajar y luego subir).
         
-        console.log(`Body Angle: ${bodyAngle.toFixed(2)}`);
-
-        if (bodyAngle > 0.15) {
-            this.updateStatus('waiting', '🔄 Ponte en posición de plancha');
-            return;
-        }
-
-        // Calcular ángulo del codo
-        const leftElbowAngle = this.calculateAngle(leftShoulder, leftElbow, leftWrist);
-        const rightElbowAngle = this.calculateAngle(rightShoulder, rightElbow, rightWrist);
-        const avgElbowAngle = (leftElbowAngle + rightElbowAngle) / 2;
-
-        console.log(`Elbow Angle: ${avgElbowAngle.toFixed(2)}`);
-
-        // Verificar que ambos brazos estén sincronizados
-        const elbowDifference = Math.abs(leftElbowAngle - rightElbowAngle);
-        if (elbowDifference > 30) {
-            this.updateStatus('waiting', '⚖️ Mantén ambos brazos sincronizados');
-            return;
-        }
-
-        // Verificar que las manos estén en el suelomás abajo que los hombros
-        const avgWristY = (leftWrist.y + rightWrist.y) / 2;
-        if (avgWristY < avgShoulderY) {
-            this.updateStatus('waiting', '👐 Coloca las manos en el suelo');
-            return;
-        }
-
-        // Detectar flexión (más estricto)
-        if (avgElbowAngle < 70 && !this.isInPosition) {
-            this.isInPosition = true;
-            this.updateStatus('exercising', '⬇️ Bajando... ¡Bien!');
-        } else if (avgElbowAngle > 150 && this.isInPosition) {
-            this.isInPosition = false;
+        // Si estábamos arriba (up) y ahora estamos abajo (isDown), cambiamos el estado a 'down'.
+        if (this.stage === 'up' && isDown) {
+            this.stage = 'down';
+            this.updateStatus('exercising', '⬇️ ¡Baja!');
+        } 
+        // Si estábamos abajo (down) y ahora estamos arriba (isUp), significa que se completó una repetición.
+        else if (this.stage === 'down' && isUp) {
+            this.stage = 'up';
             this.completeRep('pushup');
         }
     }
 
     analyzePullups(landmarks) {
-        // Puntos clave: hombros (11,12), muñecas (15,16), codos (13,14)
+        const nose = landmarks[0];
         const leftShoulder = landmarks[11];
         const rightShoulder = landmarks[12];
         const leftWrist = landmarks[15];
@@ -196,39 +170,41 @@ class ExerciseApp {
         const leftElbow = landmarks[13];
         const rightElbow = landmarks[14];
 
-        if (!leftShoulder || !rightShoulder || !leftWrist || !rightWrist || 
-            !leftElbow || !rightElbow) return;
-
-        // Verificar que las manos estén arriba (por encima de los hombros)
-        const avgShoulderY = (leftShoulder.y + rightShoulder.y) / 2;
-        const avgWristY = (leftWrist.y + rightWrist.y) / 2;
-        
-        if (avgWristY > avgShoulderY - 0.1) {
-            this.updateStatus('waiting', '🙌 Agarra la barra (manos arriba)');
+        if (!nose || !leftShoulder || !rightShoulder || !leftWrist || !rightWrist || !leftElbow || !rightElbow) {
+            this.updateStatus('waiting', 'Asegúrate de que tu torso y cara sean visibles.');
             return;
         }
 
-        // Calcular la diferencia de altura (más preciso)
-        const heightDiff = avgShoulderY - avgWristY;
-        
-        // Verificar que ambos brazos estén sincronizados
-        const wristDifference = Math.abs(leftWrist.y - rightWrist.y);
-        if (wristDifference > 0.1) {
-            this.updateStatus('waiting', '⚖️ Mantén ambas manos al mismo nivel');
+        const wristAvgY = (leftWrist.y + rightWrist.y) / 2;
+        const shoulderAvgY = (leftShoulder.y + rightShoulder.y) / 2;
+
+        // Se valida que las manos estén por encima de los hombros, como en una barra.
+        if (wristAvgY > shoulderAvgY) {
+            this.updateStatus('waiting', '🙌 Agarra la barra (manos arriba).');
             return;
         }
 
-        // Calcular ángulo de los codos para más precisión
+        // --- Lógica de Detección Multi-ángulo ---
+
+        // Condición de subida: la nariz está por encima de las muñecas. Es el punto más alto de la dominada.
+        const isUp = nose.y <= wristAvgY;
+        
+        // Condición de bajada: los brazos están casi rectos. Usamos el ángulo para esto.
         const leftElbowAngle = this.calculateAngle(leftShoulder, leftElbow, leftWrist);
         const rightElbowAngle = this.calculateAngle(rightShoulder, rightElbow, rightWrist);
         const avgElbowAngle = (leftElbowAngle + rightElbowAngle) / 2;
+        const isDown = avgElbowAngle > 150; // 150 grados indica brazos casi extendidos.
 
-        // Detectar dominada completa (más estricto)
-        if (heightDiff < 0.15 && avgElbowAngle < 100 && !this.isInPosition) {
-            this.isInPosition = true;
-            this.updateStatus('exercising', '⬆️ Subiendo... ¡Fuerza!');
-        } else if (heightDiff > 0.25 && avgElbowAngle > 140 && this.isInPosition) {
-            this.isInPosition = false;
+        // --- Máquina de Estados para Contar Repeticiones ---
+
+        // Si estábamos arriba (up) y ahora estamos abajo (isDown), cambiamos el estado a 'down'.
+        if (this.stage === 'up' && isDown) { 
+            this.stage = 'down';
+            this.updateStatus('exercising', '⬇️ ¡Baja por completo!');
+        } 
+        // Si estábamos abajo (down) y ahora estamos arriba (isUp), se completó la repetición.
+        else if (this.stage === 'down' && isUp) { 
+            this.stage = 'up';
             this.completeRep('pullup');
         }
     }
@@ -252,13 +228,11 @@ class ExerciseApp {
             this.pullupTotalCounter.textContent = this.pullupCount;
             this.savePet('dog');
         }
-        
+
         this.updateStatus('ready', '✅ ¡Repetición completada!');
         this.updateCurrentPet();
-        
-        // Mostrar celebración
         this.showCelebration('💪 ¡Bien hecho!');
-        
+
         setTimeout(() => {
             this.updateStatus('ready', '✅ Listo para la siguiente');
         }, 1500);
@@ -274,14 +248,9 @@ class ExerciseApp {
             this.dogCounter.textContent = this.dogsCount;
             this.showCelebration('🎉 ¡PERRITO SALVADO! 🐶✨');
         }
-        
-        // Actualizar mascota actual
+
         this.updateCurrentPet();
-        
-        // Efecto de partículas
         this.createParticleEffect();
-        
-        // Reset contador de repeticiones actuales
         this.repCounter.textContent = 0;
     }
 
@@ -309,7 +278,6 @@ class ExerciseApp {
                 animation: particle-fall 3s ease-out forwards;
             `;
             document.body.appendChild(particle);
-            
             setTimeout(() => particle.remove(), 3000);
         }
     }
@@ -324,10 +292,15 @@ class ExerciseApp {
             btn.addEventListener('click', (e) => {
                 document.querySelector('.exercise-btn.active').classList.remove('active');
                 e.target.classList.add('active');
-                
+
                 this.currentExercise = e.target.dataset.exercise;
                 this.currentExerciseSpan.textContent = e.target.textContent.replace('💪 ', '').replace('🏋️ ', '');
                 
+                // Reset state for new exercise
+                this.stage = 'up';
+                this.repCount = 0;
+                this.repCounter.textContent = 0;
+                this.updateStatus('ready', '✅ Listo para ejercitar');
                 this.updateCurrentPet();
             });
         });
@@ -343,6 +316,7 @@ class ExerciseApp {
 
     startExercise() {
         this.isActive = true;
+        this.stage = 'up'; // Reset stage on start
         this.camera.start();
         document.getElementById('startBtn').textContent = '⏹️ Detener Ejercicio';
         this.updateStatus('exercising', '🔥 ¡Ejercitando!');
@@ -357,9 +331,7 @@ class ExerciseApp {
 
         document.getElementById('startBtn').textContent = '🚀 Comenzar Ejercicio';
         this.updateStatus('ready', '✅ Listo para ejercitar');
-        
-        
-        this.isInPosition = false;
+        this.stage = 'up';
     }
 }
 
