@@ -16,6 +16,11 @@
         <div class="camera-section">
             <video id="videoElement" autoplay muted playsinline></video>
             <canvas id="canvasElement" class="canvas-overlay"></canvas>
+            <div class="debug-info" id="debugInfo" style="display: none;">
+                Stage: <span id="debugStage">-</span><br>
+                Angle: <span id="debugAngle">-</span><br>
+                Position: <span id="debugPosition">-</span>
+            </div>
         </div>
         
         <div class="ui-section">
@@ -75,7 +80,7 @@
         </div>
     </div>
 
-    <div class="celebration" id="celebration"></div>
+    <div class="celebration" id="celebration"></div>    </body>
     <script src="./src/gymatrixai-brain.js"></script>
 
 </body>
