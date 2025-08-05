@@ -185,42 +185,46 @@ class ExerciseApp {
     }
 
     analyzePullups(landmarks) {
-        const nose = landmarks[0];
         const leftShoulder = landmarks[11];
         const rightShoulder = landmarks[12];
         const leftWrist = landmarks[15];
         const rightWrist = landmarks[16];
-        const leftElbow = landmarks[13];
-        const rightElbow = landmarks[14];
 
-        if (!nose || !leftShoulder || !rightShoulder || !leftWrist || !rightWrist || !leftElbow || !rightElbow) {
-            this.updateStatus('waiting', 'Asegúrate de que tu torso y cara sean visibles.');
+        if (!leftShoulder || !rightShoulder || !leftWrist || !rightWrist) {
+            this.updateStatus('waiting', 'Asegúrate de que tu torso y brazos sean visibles.');
             return;
         }
 
-        const wristAvgY = this.smoothPosition((leftWrist.y + rightWrist.y) / 2, 'wristY');
-        const shoulderAvgY = this.smoothPosition((leftShoulder.y + rightShoulder.y) / 2, 'shoulderY');
-        const noseY = this.smoothPosition(nose.y, 'noseY');
+        const shoulderAvgY = (leftShoulder.y + rightShoulder.y) / 2;
+        const wristAvgY = (leftWrist.y + rightWrist.y) / 2;
 
-        // Validar posición de manos
+        // Validar que las manos estén por encima de los hombros (agarrando la barra).
         if (wristAvgY > shoulderAvgY) {
             this.updateStatus('waiting', '🙌 Agarra la barra (manos arriba).');
             return;
         }
 
-        // Calcular ángulos de los brazos
-        const leftElbowAngle = this.calculateAngle(leftShoulder, leftElbow, leftWrist);
-        const rightElbowAngle = this.calculateAngle(rightShoulder, rightElbow, rightWrist);
-        const avgElbowAngle = this.smoothPosition((leftElbowAngle + rightElbowAngle) / 2, 'elbowAngle');
+        // --- Lógica de Detección Multi-ángulo por Distancia Vertical ---
+        // Se calcula la diferencia de altura normalizada entre hombros y muñecas.
+        const heightDiff = Math.abs(shoulderAvgY - wristAvgY);
 
-        // Lógica mejorada
-        const isUp = noseY <= wristAvgY * 1.05 && avgElbowAngle < 120;
-        const isDown = avgElbowAngle > 140 && noseY > wristAvgY * 1.15;
+        // Condición de subida: La distancia vertical entre hombros y muñecas es pequeña.
+        const isUp = heightDiff < 0.15;
 
-        // Debug info
-        this.updateDebugInfo(this.stage, avgElbowAngle.toFixed(1), `N:${noseY.toFixed(3)} W:${wristAvgY.toFixed(3)}`);
+        // Condición de bajada: La distancia vertical es grande (brazos extendidos).
+        const isDown = heightDiff > 0.25;
 
-        this.processStageChange(isUp, isDown, 'pullup');
+        // --- Máquina de Estados para Contar Repeticiones ---
+        // Si estábamos abajo (down) y ahora estamos arriba (isUp), se completó una repetición.
+        if (this.stage === 'down' && isUp) {
+            this.stage = 'up';
+            this.completeRep('pullup');
+        } 
+        // Si estábamos arriba (up) y ahora estamos abajo (isDown), cambiamos el estado a 'down'.
+        else if (this.stage === 'up' && isDown) {
+            this.stage = 'down';
+            this.updateStatus('exercising', '⬇️ ¡Baja por completo!');
+        }
     }
 
     processStageChange(isUp, isDown, exerciseType) {
