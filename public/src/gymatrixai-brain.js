@@ -303,6 +303,8 @@ class ExerciseApp {
         if (this.renderer && this.scene && this.camera) {
             this.renderer.render(this.scene, this.camera);
         }
+    }
+
     smoothPosition(currentValue, key) {
         if (!this.positionHistory[key]) {
             this.positionHistory[key] = [];
