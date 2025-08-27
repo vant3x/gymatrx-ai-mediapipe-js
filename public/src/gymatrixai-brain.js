@@ -16,6 +16,20 @@ class ExerciseApp {
         
         // Anti-bounce: evita cambios muy rápidos
         this.minStageTime = 500; // 500ms mínimo entre cambios de stage
+
+        // Umbrales de ángulo para ejercicios
+        this.PUSHUP_DOWN_ANGLE = 90;   // Ángulo del codo cuando está abajo (flexión)
+        this.PUSHUP_UP_ANGLE = 160;    // Ángulo del codo cuando está arriba (extensión)
+        this.PULLUP_UP_ANGLE = 90;     // Ángulo del codo cuando está arriba (dominada)
+        this.PULLUP_DOWN_ANGLE = 160;  // Ángulo del codo cuando está abajo (extensión)
+
+        // Umbrales de posición vertical para flexiones (hombro vs codo)
+        this.PUSHUP_SHOULDER_ELBOW_RATIO_DOWN = 0.95; // Hombro >= codo * ratio (para abajo)
+        this.PUSHUP_SHOULDER_ELBOW_RATIO_UP = 0.90;   // Hombro < codo * ratio (para arriba)
+
+        // Umbrales de distancia vertical para dominadas (hombro vs muñeca)
+        this.PULLUP_HEIGHT_DIFF_UP = 0.15;   // Diferencia de altura pequeña (arriba)
+        this.PULLUP_HEIGHT_DIFF_DOWN = 0.25; // Diferencia de altura grande (abajo)
         
         // Smoothing para reducir jitter
         this.positionHistory = [];
@@ -175,8 +189,8 @@ class ExerciseApp {
         const avgArmAngle = this.smoothPosition((leftArmAngle + rightArmAngle) / 2, 'armAngle');
 
         // Lógica mejorada con ángulos y posición
-        const isDown = avgArmAngle < 100 && shoulderAvgY >= elbowAvgY * 0.95;
-        const isUp = avgArmAngle > 140 && shoulderAvgY < elbowAvgY * 0.90;
+        const isDown = avgArmAngle < this.PUSHUP_DOWN_ANGLE && shoulderAvgY >= elbowAvgY * this.PUSHUP_SHOULDER_ELBOW_RATIO_DOWN;
+        const isUp = avgArmAngle > this.PUSHUP_UP_ANGLE && shoulderAvgY < elbowAvgY * this.PUSHUP_SHOULDER_ELBOW_RATIO_UP;
 
         // Debug info
         this.updateDebugInfo(this.stage, avgArmAngle.toFixed(1), `S:${shoulderAvgY.toFixed(3)} E:${elbowAvgY.toFixed(3)}`);
@@ -209,22 +223,13 @@ class ExerciseApp {
         const heightDiff = Math.abs(shoulderAvgY - wristAvgY);
 
         // Condición de subida: La distancia vertical entre hombros y muñecas es pequeña.
-        const isUp = heightDiff < 0.15;
+        const isUp = heightDiff < this.PULLUP_HEIGHT_DIFF_UP;
 
         // Condición de bajada: La distancia vertical es grande (brazos extendidos).
-        const isDown = heightDiff > 0.25;
+        const isDown = heightDiff > this.PULLUP_HEIGHT_DIFF_DOWN;
 
-        // --- Máquina de Estados para Contar Repeticiones ---
-        // Si estábamos abajo (down) y ahora estamos arriba (isUp), se completó una repetición.
-        if (this.stage === 'down' && isUp) {
-            this.stage = 'up';
-            this.completeRep('pullup');
-        } 
-        // Si estábamos arriba (up) y ahora estamos abajo (isDown), cambiamos el estado a 'down'.
-        else if (this.stage === 'up' && isDown) {
-            this.stage = 'down';
-            this.updateStatus('exercising', '⬇️ ¡Baja por completo!');
-        }
+        // Usar el procesador de cambio de etapa común
+        this.processStageChange(isUp, isDown, 'pullup');
     }
 
     processStageChange(isUp, isDown, exerciseType) {
